@@ -75,6 +75,8 @@ struct client_info {
   struct sockaddr_storage address;
   SOCKET socket;
   char request[MAX_REQUEST_SIZE + 1];
+  char method[10];
+  char uri[256];
   int received;
   struct client_info *next;
 };
@@ -150,25 +152,45 @@ void send_404(struct client_info *client) {
   send(client->socket, c404, strlen(c404), 0);
   drop_client(client);
 }
+
 void header(struct client_info *client) {
-  const char *h = client->request;
-  char b[101];
-  size_t i = 0;
-  int c = 0;
-  while (*h) {
-    if (*h == '\r') {
-      b[i] = 0;
-      printf("123 %s %d\n", b, strncasecmp("User-Agent", b, 10));
-      i = 0;
-      c = 0;
-      while (*(++h) == '\n' || *h == '\r') {
-        c++;
+  const char *a = client->request;
+  int c = 100, d = 0, e = 0, f = 0, i = 0, k = 0;
+  char b[c + 1];
+  char *h = client->method;
+  char *j = client->uri;
+
+  while (*a) {
+    if (*a == '\r') {
+      // terminate string
+      b[d] = 0;
+      // parsing method url
+      if (!f) {
+        for (int g = 0; g < c; g++) {
+          if (!i) {  // parse method
+            *h++ = b[g];
+            if (b[g] == ' ') i = 1;
+          } else if (!k) {  // parse uri
+            *j++ = b[g];
+            if (b[g] == ' ') k = 1;
+          }
+        }
+        printf("%s %s\n", client->method, client->uri);
+
+        f = 1;
       }
-      if (c == 3) break;
+      //
+      // reset index
+      d = 0;
+      // Checking if the pointer has reached the "\r\n\r\n"
+      e = 0;
+      while (*(++a) == '\n' || *a == 'r') e++;
+      if (e == 3) break;
+      //
       continue;
     }
-    if (i < 100) b[i++] = *h;
-    h++;
+    if (d < c) b[d++] = *a;
+    a++;
   }
 }
 int main(int argc, char *argv[]) {

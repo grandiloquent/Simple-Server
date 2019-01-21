@@ -1,2 +1,4 @@
-"# Simple-Server-" 
-"# Simple-Server" 
+# Simple Server
+
+A simple webserver in C.
+
