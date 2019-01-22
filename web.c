@@ -59,7 +59,8 @@ void accept_request(int client) {
   char method[255];
   char url[255];
   char path[512];
-  char agent[512];
+  // char agent[512];
+  size_t range = 0;
 
   size_t i, j;
   struct stat st;
@@ -99,16 +100,16 @@ void accept_request(int client) {
   if (path[strlen(path) - 1] == '/') strcat(path, "index.html");
   while ((numchars > 0) && strcmp("\n", buf)) {
     numchars = get_line(client, buf, sizeof(buf));
-    if (strncasecmp(buf, "User-Agent", 10) == 0) {
-      if (strlen(buf) > 12) continue;
+    if (strncasecmp(buf, "Range", 5) == 0) {
+      if (strlen(buf) > 7) continue;
       i = 0;
-      j = 12;
+      j = 7;
       while (buf[j] != '\n' && (j < sizeof(agent) - 1)) {
         agent[i] = buf[j];
         i++;
         j++;
       }
-      printf("%s\n", agent);
+      scanf("%zu", &range);
     }
   }
   if (stat(path, &st) == -1) {
@@ -146,9 +147,12 @@ void cannot_execute(int client) {
   sprintf(buf, "<P>Error prohibited CGI execution.\r\n");
   send(client, buf, strlen(buf), 0);
 }
-void cat(int client, FILE *resource) {
+void cat(int client, FILE *resource, size_t range) {
   char buf[1024];
   fgets(buf, sizeof(buf), resource);
+  if (range) {
+    fseek(resource, range, SEEK_SET);
+  }
   while (!feof(resource)) {
     // https://docs.microsoft.com/en-us/windows/desktop/api/winsock2/nf-winsock2-send
     if (send(client, buf, strlen(buf), 0) == -1) return;
