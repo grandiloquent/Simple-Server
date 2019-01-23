@@ -27,6 +27,8 @@
                 spellChecker: false
 
             });
+            this.title = document.getElementById("title");
+            this.title.innerText = "新文档";
             this.mde.codemirror.addKeyMap({
                 "F1": () => this.onUpdate(),
                 "F2": () => this.onDownload(),
@@ -37,6 +39,8 @@
                 },
                 "Esc": () => {
                     window.location.hash = "";
+                    this.mde.value("");
+                    this.title.innerText = "新文档";
                 }
             })
 
@@ -76,9 +80,10 @@
                 return response.json();
             })
             .then(data => {
-                console.log(data);
-                Toast.onShow("成功", "成功更新文档")
-                window.location.hash = data['id'];
+                this.title.innerText = obj['title'];
+                Toast.onShow("成功", "成功更新文档");
+                if (data['id'])
+                    window.location.hash = data['id'];
             }).catch((e) => {
 
                 Toast.onShow("错误", e + ' ');
@@ -119,7 +124,6 @@
         }
         obj['title'] = title;
         obj['content'] = value;
-        console.log(obj);
         return obj;
     }
     Editor.prototype.onFetch = function (hash) {
@@ -133,6 +137,7 @@
             .then(data => {
 
                 let value = data['content'];
+                this.title.innerText = data['title'];
                 this.mde.value(value);
             });
     }

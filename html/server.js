@@ -53,16 +53,14 @@ const updateDatabase = (obj, callback) => {
         var s = db.prepare("UPDATE note SET title=?,content=? where _id=?");
         s.run(obj['title'], obj['content'], obj['id']);
         s.finalize();
-        db.get("SELECT last_insert_rowid()", (err, row) => {
-            console.log(row);
-        });
+        callback();
     });
 }
 const queryRecords = (callback) => {
     db.all("select _id,title from note order by updated_at desc", callback);
 }
 const queryRecord = (id, callback) => {
-    db.get("select _id,title from note where _id = ?", id, callback);
+    db.get("select _id,title,content from note where _id = ?", id, callback);
 }
 const app = express();
 app.use(express.static("."));
@@ -304,6 +302,13 @@ app.post("/api/update", (req, res) => {
                 if (err) res.status(500).send(err + ' ');
                 else res.status(200).send({
                     "id": lastInsertId['last_insert_rowid()']
+                });
+            })
+        } else {
+            updateDatabase(obj, (err, lastInsertId) => {
+                if (err) res.status(500).send(err + ' ');
+                else res.status(200).send({
+                    "id": obj['id']
                 });
             })
         }
